@@ -1,4 +1,5 @@
 const tmi = require('tmi.js');
+const cfg = require('./config.js');
 
 // create client with channel to join
 const client = new tmi.Client({
@@ -8,10 +9,10 @@ const client = new tmi.Client({
 		secure: true
 	},
 	identity: {
-		username: '',
-		password: ''
+		username: cfg.twitch.username,
+		password: cfg.twitch.oauth_token
 	},
-	channels: [ '' ]
+	channels: cfg.twitch.channels
 });
 
 // connect to Twitch

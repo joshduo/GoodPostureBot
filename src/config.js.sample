@@ -1,0 +1,16 @@
+var twitch = {
+    // Twitch username to login with
+    username: "USERNAME_HERE",
+    // Twitch OAuth token (generated from https://twitchapps.com/tmi/)
+    oauth_token: "TOKEN_HERE",
+    // Channel(s) to connect to
+    channels: ["CHANNEL_HERE", "CHANNEL2_HERE"]
+};
+
+var options = {
+    // Log executed commands
+    command_logging: true
+};
+
+exports.twitch = twitch;
+exports.options = options;
