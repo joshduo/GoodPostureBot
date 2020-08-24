@@ -1,0 +1,19 @@
+{
+  "name": "posturebot",
+  "version": "1.0.0",
+  "description": "A simple Twitch bot that reminds viewers to sit up straight.",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ."
+  },
+  "author": "Joshua Duong",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "LINK"
+  },
+  "dependencies": {
+    "tmi.js": "^1.5.0"
+  }
+}
