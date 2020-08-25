@@ -24,6 +24,27 @@ function remindPosture(channel) {
 	timeoutId = setTimeout(remindPosture, interval, channel);
 }
 
+/**
+ * get the permission level of a user based on their badges
+ * 	- moderator, broadcaster, other
+ */
+function getPermission(badges) {
+	console.log(badges);
+	if (badges === null) {
+		console.log("this is a normal user");
+	}
+	else if (badges.moderator === '1') {
+		console.log("this is a mod");
+	}
+	else if (badges.broadcaster === '1') {
+		console.log("this is a broadcaster");
+	}
+	else {
+		console.log("this is anyone else");
+	}
+
+}
+
 // connect to Twitch
 client.connect().catch(console.error);
 
@@ -37,6 +58,8 @@ client.on('join', (channel, username, isSelf) => {
 client.on('message', (channel, tags, message, isSelf) => {
 	if(isSelf) return;
 	if(!message.startsWith("!")) return;
+
+	getPermission(tags.badges);
 
 	var msgparts = message.split(/[ ]+/);
 	var command = msgparts[0];
@@ -67,12 +90,23 @@ client.on('message', (channel, tags, message, isSelf) => {
 	}
 	// stop posture reminders
 	else if (command === '!gpbstop') {
-		clearTimeout(timeoutId);
-		client.say(channel, `@${tags.username}, posture reminders stopped.`);
+		if (timeoutId._idleTimeout === -1) {
+			client.say(channel, `@${tags.username}, posture reminders already stopped.`);
+		}
+		else {
+			clearTimeout(timeoutId);
+			client.say(channel, `@${tags.username}, posture reminders stopped.`);
+		}
+
 	}
 	// start posture reminders
 	else if (command === '!gpbstart') {
-		timeoutId = setTimeout(remindPosture, interval, channel);
-		client.say(channel, `@${tags.username}, posture reminders started.`);
+		if (timeoutId._idleTimeout === -1) {
+			timeoutId = setTimeout(remindPosture, interval, channel);
+			client.say(channel, `@${tags.username}, posture reminders started.`);
+		}
+		else {
+			client.say(channel, `@${tags.username}, posture reminders already started.`);
+		}
 	}
 });
