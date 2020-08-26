@@ -1,5 +1,6 @@
 const tmi = require('tmi.js');
 const cfg = require('./config.js');
+const cmds = require('./commands/commands.js');
 
 // create client with channel to join
 const client = new tmi.Client({
@@ -15,21 +16,27 @@ const client = new tmi.Client({
 	channels: cfg.twitch.channels
 });
 
-var interval = 5000;	// time interval between posture reminders
-var timeoutId;			// id of setTimeout() for use with clearTimeout()
-
-// repeat posture message on interval
-function remindPosture(channel) {
-	client.say(channel, "Sit up straight, bro.");
-	timeoutId = setTimeout(remindPosture, interval, channel);
+// create posture reminder with default fields and reminder function 
+var reminder = {
+	interval: 5000,
+	timeoutId: null,
+	func: (channel) => {
+		client.say(channel, "Sit up straight, bro.");
+		reminder.timeoutId = setTimeout(reminder.func, reminder.interval, channel);
+	}
 }
 
 /**
  * get the permission level of a user based on their badges
- * 	- moderator, broadcaster, other
+ * 	- 1: not mod/broadcaster
+ * 	- 2: mod/broadcaster
+ * 	- 3: broadcaster only
  */
+
+ /*
 function getPermission(badges) {
 	console.log(badges);
+
 	if (badges === null) {
 		console.log("this is a normal user");
 	}
@@ -42,8 +49,8 @@ function getPermission(badges) {
 	else {
 		console.log("this is anyone else");
 	}
-
 }
+*/
 
 // connect to Twitch
 client.connect().catch(console.error);
@@ -51,62 +58,23 @@ client.connect().catch(console.error);
 // start sending messages when the client connects to the channel
 client.on('join', (channel, username, isSelf) => {
 	if(!isSelf) return;
-	timeoutId = setTimeout(remindPosture, interval, channel);
+	reminder.timeoutId = setTimeout(reminder.func, reminder.interval, channel);
 }) 
 
 // read chat for commands
 client.on('message', (channel, tags, message, isSelf) => {
 	if(isSelf) return;
-	if(!message.startsWith("!")) return;
+	if(!message.startsWith(cfg.twitch.prefix)) return;
 
 	getPermission(tags.badges);
 
-	var msgparts = message.split(/[ ]+/);
+	var msgparts = message.toLowerCase().split(/[ ]+/);
 	var command = msgparts[0];
+	var commandName = command.split(cfg.twitch.prefix)[1];
 
-	// TODO MOVE COMMANDS TO A SEPARATE FILE
-	// example greeting command
-	if(command === '!hello') {
-		client.say(channel, `@${tags.username}, heya!`);
-		console.log(channel);
-	}
-	// change time interval to send messages (in minutes for now)
-	else if(command === '!gpbchange') {
+	// run command if it exists
+	if (cmds.hasOwnProperty(commandName)) {
 		let time = msgparts[1];
-		
-		// catch invalid time inttervals
-		if(isNaN(time) || time < 15 || time > 60) {
-			client.say(channel, `@${tags.username}, invalid time interval. Enter a number between 15 and 60`);
-		}
-		else {
-			// set interval to time in ms
-			interval = time * 60 * 1000;
-
-			// restart timeout for posture messages with updated interval
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(remindPosture, interval, channel);
-			client.say(channel, `@${tags.username}, time interval changed to ${time} minutes.`);
-		}
-	}
-	// stop posture reminders
-	else if (command === '!gpbstop') {
-		if (timeoutId._idleTimeout === -1) {
-			client.say(channel, `@${tags.username}, posture reminders already stopped.`);
-		}
-		else {
-			clearTimeout(timeoutId);
-			client.say(channel, `@${tags.username}, posture reminders stopped.`);
-		}
-
-	}
-	// start posture reminders
-	else if (command === '!gpbstart') {
-		if (timeoutId._idleTimeout === -1) {
-			timeoutId = setTimeout(remindPosture, interval, channel);
-			client.say(channel, `@${tags.username}, posture reminders started.`);
-		}
-		else {
-			client.say(channel, `@${tags.username}, posture reminders already started.`);
-		}
+		cmds[commandName].func(client, channel, tags, reminder, time);
 	}
 });
