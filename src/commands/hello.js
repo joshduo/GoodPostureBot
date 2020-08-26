@@ -5,6 +5,6 @@ module.exports = {
     desc: "Greets the user who called the command.",
     permission: 1,
     func: (client, channel, tags, _reminder, _time) => {
-		client.say(channel, `@${tags.username}, heya!`);
+        client.say(channel, `@${tags.username}, heya!`);
     }
 }
